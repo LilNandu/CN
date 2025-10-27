@@ -1,0 +1,101 @@
+// WAP to build client-server model (Full Duplex Communication)
+// File: server.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <pthread.h>
+
+int newSocket;
+
+// Function for receiving messages
+void *recv_msg(void *arg) {
+    char buffer[1024];
+    while (1) {
+        bzero(buffer, sizeof(buffer));
+        recv(newSocket, buffer, sizeof(buffer), 0);
+        if (strncmp(buffer, "exit", 4) == 0) {
+            printf("\nClient disconnected.\n");
+            close(newSocket);
+            exit(0);
+        }
+        printf("\nClient: %s", buffer);
+        printf("Server: ");
+        fflush(stdout);
+    }
+}
+
+// Function for sending messages
+void *send_msg(void *arg) {
+    char buffer[1024];
+    while (1) {
+        bzero(buffer, sizeof(buffer));
+        printf("Server: ");
+        fgets(buffer, sizeof(buffer), stdin);
+        send(newSocket, buffer, strlen(buffer), 0);
+        if (strncmp(buffer, "exit", 4) == 0) {
+            printf("Server exiting.\n");
+            close(newSocket);
+            exit(0);
+        }
+    }
+}
+
+int main() {
+    int sockfd;
+    struct sockaddr_in serverAddr, clientAddr;
+    socklen_t addr_size;
+
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
+        printf("Error in socket creation.\n");
+        exit(1);
+    }
+    printf("Server socket created successfully.\n");
+
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(8080);
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+        printf("Error in binding.\n");
+        exit(1);
+    }
+    printf("Binding successful.\n");
+
+    if (listen(sockfd, 5) == 0)
+        printf("Listening...\n");
+    else {
+        printf("Error in listening.\n");
+        exit(1);
+    }
+
+    addr_size = sizeof(clientAddr);
+    newSocket = accept(sockfd, (struct sockaddr*)&clientAddr, &addr_size);
+    printf("Client connected.\n");
+
+    pthread_t sendThread, recvThread;
+    pthread_create(&sendThread, NULL, send_msg, NULL);
+    pthread_create(&recvThread, NULL, recv_msg, NULL);
+
+    pthread_join(sendThread, NULL);
+    pthread_join(recvThread, NULL);
+
+    close(sockfd);
+    return 0;
+}
+
+/*
+------------------- EXECUTION STEPS -------------------
+# 1. Compile the server code:
+gcc server.c -o server -lpthread
+
+# 2. Run the server:
+./server
+
+# 3. Wait for the client to connect.
+# 4. Then open another terminal (or use another computer) and run the client program.
+-------------------------------------------------------
+*/

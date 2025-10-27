@@ -1,0 +1,84 @@
+// WAP to build client-server model (Half Duplex Communication)
+// File: server.c
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+int main() {
+    int sockfd, newsockfd;
+    struct sockaddr_in serverAddr, clientAddr;
+    socklen_t addr_size;
+    char buffer[1024];
+
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
+        printf("Error in socket creation.\n");
+        exit(1);
+    }
+    printf("Server socket created successfully.\n");
+
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(8080);
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+        printf("Error in binding.\n");
+        exit(1);
+    }
+    printf("Binding successful.\n");
+
+    if (listen(sockfd, 5) == 0)
+        printf("Listening...\n");
+    else {
+        printf("Error in listening.\n");
+        exit(1);
+    }
+
+    addr_size = sizeof(clientAddr);
+    newsockfd = accept(sockfd, (struct sockaddr*)&clientAddr, &addr_size);
+    if (newsockfd < 0) {
+        printf("Error in accepting.\n");
+        exit(1);
+    }
+
+    while (1) {
+        bzero(buffer, sizeof(buffer));
+        recv(newsockfd, buffer, sizeof(buffer), 0);
+        printf("Client: %s\n", buffer);
+
+        if (strncmp(buffer, "exit", 4) == 0) {
+            printf("Disconnected from client.\n");
+            break;
+        }
+
+        bzero(buffer, sizeof(buffer));
+        printf("Server: ");
+        fgets(buffer, sizeof(buffer), stdin);
+        send(newsockfd, buffer, strlen(buffer), 0);
+
+        if (strncmp(buffer, "exit", 4) == 0) {
+            printf("Server exiting.\n");
+            break;
+        }
+    }
+
+    close(newsockfd);
+    close(sockfd);
+    return 0;
+}
+
+/*
+------------------- EXECUTION STEPS -------------------
+# 1. Compile the code
+gcc server.c -o server
+
+# 2. Run the server
+./server
+
+# 3. The server will wait for a client connection.
+# 4. Then open another terminal (or use another computer) and run the client program.
+-------------------------------------------------------
+*/

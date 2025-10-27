@@ -1,0 +1,89 @@
+// WAP to build client-server model (Full Duplex Communication)
+// File: client.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <pthread.h>
+
+int clientSocket;
+
+// Function for receiving messages
+void *recv_msg(void *arg) {
+    char buffer[1024];
+    while (1) {
+        bzero(buffer, sizeof(buffer));
+        recv(clientSocket, buffer, sizeof(buffer), 0);
+        if (strncmp(buffer, "exit", 4) == 0) {
+            printf("\nServer disconnected.\n");
+            close(clientSocket);
+            exit(0);
+        }
+        printf("\nServer: %s", buffer);
+        printf("Client: ");
+        fflush(stdout);
+    }
+}
+
+// Function for sending messages
+void *send_msg(void *arg) {
+    char buffer[1024];
+    while (1) {
+        bzero(buffer, sizeof(buffer));
+        printf("Client: ");
+        fgets(buffer, sizeof(buffer), stdin);
+        send(clientSocket, buffer, strlen(buffer), 0);
+        if (strncmp(buffer, "exit", 4) == 0) {
+            printf("Client exiting.\n");
+            close(clientSocket);
+            exit(0);
+        }
+    }
+}
+
+int main() {
+    struct sockaddr_in serverAddr;
+
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (clientSocket < 0) {
+        printf("Error in socket creation.\n");
+        exit(1);
+    }
+    printf("Client socket created successfully.\n");
+
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(8080);
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); // Change IP if using different computers
+
+    if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+        printf("Connection error.\n");
+        exit(1);
+    }
+    printf("Connected to server.\n");
+
+    pthread_t sendThread, recvThread;
+    pthread_create(&sendThread, NULL, send_msg, NULL);
+    pthread_create(&recvThread, NULL, recv_msg, NULL);
+
+    pthread_join(sendThread, NULL);
+    pthread_join(recvThread, NULL);
+
+    close(clientSocket);
+    return 0;
+}
+
+/*
+------------------- EXECUTION STEPS -------------------
+# 1. Compile the client code:
+gcc client.c -o client -lpthread
+
+# 2. Run the client:
+./client
+
+# 3. Communicate simultaneously with the server.
+#    Both can send and receive messages at the same time.
+#    Type 'exit' to terminate the chat.
+-------------------------------------------------------
+*/

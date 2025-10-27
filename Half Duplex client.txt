@@ -1,0 +1,69 @@
+// WAP to build client-server model (Half Duplex Communication)
+// File: client.c
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+int main() {
+    int clientSocket;
+    struct sockaddr_in serverAddr;
+    char buffer[1024];
+
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (clientSocket < 0) {
+        printf("Error in socket creation.\n");
+        exit(1);
+    }
+    printf("Client socket created successfully.\n");
+
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(8080);
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); // Change IP if using different computers
+
+    if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+        printf("Connection error.\n");
+        exit(1);
+    }
+    printf("Connected to server.\n");
+
+    while (1) {
+        bzero(buffer, sizeof(buffer));
+        printf("Client: ");
+        fgets(buffer, sizeof(buffer), stdin);
+        send(clientSocket, buffer, strlen(buffer), 0);
+
+        if (strncmp(buffer, "exit", 4) == 0) {
+            printf("Client exiting.\n");
+            break;
+        }
+
+        bzero(buffer, sizeof(buffer));
+        recv(clientSocket, buffer, sizeof(buffer), 0);
+        printf("Server: %s\n", buffer);
+
+        if (strncmp(buffer, "exit", 4) == 0) {
+            printf("Disconnected from server.\n");
+            break;
+        }
+    }
+
+    close(clientSocket);
+    return 0;
+}
+
+/*
+------------------- EXECUTION STEPS -------------------
+# 1. Compile the code
+gcc client.c -o client
+
+# 2. Run the client
+./client
+
+# 3. Communicate with the server.
+#    Type messages and press Enter to send.
+#    Type 'exit' to end the chat.
+-------------------------------------------------------
+*/
