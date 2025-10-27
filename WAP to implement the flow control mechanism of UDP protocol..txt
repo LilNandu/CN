@@ -1,0 +1,99 @@
+# Create simulator instance
+set ns [new Simulator]
+
+# Set node colors
+$ns color 1 Blue
+$ns color 2 Red
+
+# Open NAM trace file
+set nf [open out.nam w]
+$ns namtrace-all $nf
+
+# Procedure to finish simulation
+proc finish {} {
+    global ns nf
+    $ns flush-trace
+    close $nf
+    exec nam out.nam &
+    exit 0
+}
+
+# Create nodes
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+set n3 [$ns node]
+
+# Create duplex links with bandwidth, delay, and queue type
+$ns duplex-link $n0 $n1 2Mb 10ms DropTail
+$ns duplex-link $n1 $n2 2Mb 10ms DropTail
+$ns duplex-link $n2 $n3 1.7Mb 20ms DropTail
+
+# Set queue limit on bottleneck link
+$ns queue-limit $n2 $n3 5 
+
+# Adjust link orientation for NAM visualization
+$ns duplex-link-op $n0 $n1 orient right-down
+$ns duplex-link-op $n1 $n2 orient right-up
+$ns duplex-link-op $n2 $n3 orient right
+$ns duplex-link-op $n2 $n3 queuePos 0.5
+
+# Create UDP agent and attach to source node
+set udp [new Agent/UDP]
+$ns attach-agent $n0 $udp
+
+# Create Null agent (sink) and attach to destination node
+set null [new Agent/Null]
+$ns attach-agent $n3 $null
+
+# Connect UDP agent to sink
+$ns connect $udp $null
+$udp set fid_ 2
+
+# Create CBR traffic and attach to UDP agent
+set cbr [new Application/Traffic/CBR]
+$cbr attach-agent $udp
+$cbr set type_ CBR
+$cbr set packet_size_ 1000
+$cbr set rate_ 1.5mb
+$cbr set random_ false
+
+# Schedule start and stop times for CBR
+$ns at 0.1 "$cbr start"
+$ns at 4.5 "$cbr stop"
+
+# End simulation at 10 seconds
+$ns at 10.0 "finish"
+
+# Print simulation info
+puts "CBR packet size = [$cbr set packet_size_]"
+puts "CBR rate = [$cbr set rate_]"
+
+# Run the simulation
+$ns run
+
+/*
+Execution Steps:
+
+1. Save this script in a file named udp_flow_control.tcl
+   Command:
+   $ nano udp_flow_control.tcl    (or any editor)
+
+2. Make sure NS2 is installed on your system. To check:
+   $ ns -version
+
+3. Run the simulation:
+   $ ns udp_flow_control.tcl
+
+4. This will generate:
+   - out.nam (NAM trace file)
+   - UDP flow simulation results in console
+
+5. To visualize the network animation:
+   $ nam out.nam
+
+6. Observe:
+   - Packet flow through the links
+   - UDP flow behavior (no retransmission, unlike TCP)
+   - Queue behavior at bottleneck link
+*/

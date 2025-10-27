@@ -1,0 +1,101 @@
+# Create simulator instance
+set ns [new Simulator]
+
+# Set color for nodes
+$ns color 1 Blue
+$ns color 2 Red
+
+# Open NAM trace file
+set nf [open out.nam w]
+$ns namtrace-all $nf
+
+# Procedure to finish simulation
+proc finish {} {
+    global ns nf
+    $ns flush-trace
+    close $nf
+    exec nam out.nam &
+    exit 0
+}
+
+# Create nodes
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+set n3 [$ns node]
+
+# Create duplex links with bandwidth, delay, and queue type
+$ns duplex-link $n0 $n1 2Mb 10ms DropTail 
+$ns duplex-link $n1 $n2 2Mb 10ms DropTail 
+$ns duplex-link $n2 $n3 1.7Mb 20ms DropTail 
+
+# Set queue limit on bottleneck link
+$ns queue-limit $n2 $n3 5 
+
+# Adjust link orientation for NAM visualization
+$ns duplex-link-op $n0 $n1 orient right-down
+$ns duplex-link-op $n1 $n2 orient right-up
+$ns duplex-link-op $n2 $n3 orient right
+$ns duplex-link-op $n2 $n3 queuePos 0.5
+
+# Create TCP agent and attach to source node
+set tcp [new Agent/TCP]
+$tcp set class_ 2
+$tcp set packetSize_ 1000 
+$ns attach-agent $n0 $tcp
+
+# Create TCP sink and attach to destination node
+set sink [new Agent/TCPSink]
+$ns attach-agent $n3 $sink
+
+# Connect TCP agent and sink
+$ns connect $tcp $sink
+$tcp set fid_ 1 
+
+# Create FTP application and attach to TCP agent
+set ftp [new Application/FTP]
+$ftp attach-agent $tcp
+$ftp set type_ FTP
+$ftp set file_size_ 1000000 
+
+# Schedule start and stop times for FTP
+$ns at 1.0 "$ftp start"
+$ns at 4.0 "$ftp stop"
+
+# Detach agents after transfer
+$ns at 4.5 "$ns detach-agent $n0 $tcp ; $ns detach-agent $n3 $sink"
+
+# End simulation at 5 seconds
+$ns at 5.0 "finish"
+
+# Print simulation info
+puts "TCP packet size = [$tcp set packetSize_] bytes"
+puts "Link rate = 2.0 Mbps (Note: This is the bottleneck capacity)"
+
+# Run the simulation
+$ns run
+
+/*
+Execution Steps:
+
+1. Save this script in a file named tcp_flow_control.tcl
+   Command:
+   $ nano tcp_flow_control.tcl    (or any text editor)
+
+2. Make sure NS2 is installed on your system. To check:
+   $ ns -version
+
+3. Run the simulation:
+   $ ns tcp_flow_control.tcl
+
+4. This will generate:
+   - out.nam (NAM trace file)
+   - TCP flow simulation results in console
+
+5. To visualize the network animation:
+   $ nam out.nam
+
+6. Observe:
+   - Packet flow through links
+   - Flow control behavior at bottleneck link (queue limit applied)
+*/

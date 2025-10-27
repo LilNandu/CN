@@ -1,0 +1,110 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+unsigned short calculate_checksum(unsigned short data[], int size) {
+    unsigned int sum = 0;
+
+    for (int i = 0; i < size; i++) {
+        sum += data[i];
+    }
+
+    while (sum >> 16) {
+        sum = (sum & 0xFFFF) + (sum >> 16);
+    }
+
+    unsigned short checksum = (unsigned short)~sum;
+
+    return checksum;
+}
+
+int verify_checksum(unsigned short data[], int size, unsigned short received_checksum) {
+    unsigned int sum = 0;
+
+    for (int i = 0; i < size; i++) {
+        sum += data[i];
+    }
+
+    sum += received_checksum;
+
+    while (sum >> 16) {
+        sum = (sum & 0xFFFF) + (sum >> 16);
+    }
+
+    if ((unsigned short)sum == 0xFFFF) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+int main() {
+    int count;
+    
+    printf("--- Checksum Error Detection Simulation ---\n\n");
+    
+    printf("Enter the number of 16-bit data segments (e.g., 4): ");
+    
+    if (scanf("%d", &count) != 1 || count <= 0 || count > 10) {
+        fprintf(stderr, "Invalid input. Using default size 4.\n");
+        count = 4;
+    }
+    
+    unsigned short data[10];
+
+    printf("Enter the data segments (as integers):\n");
+    for (int i = 0; i < count; i++) {
+        printf("Segment %d: ", i + 1);
+        if (scanf("%hu", &data[i]) != 1) {
+            fprintf(stderr, "Invalid input. Exiting.\n");
+            return 1;
+        }
+    }
+
+    unsigned short calculated_checksum = calculate_checksum(data, count);
+    
+    printf("\n--- Sender's Transmission ---\n");
+    printf("Data Segments: ");
+    for (int i = 0; i < count; i++) {
+        printf("%hu ", data[i]);
+    }
+    printf("\nGenerated Checksum: %hu\n", calculated_checksum);
+
+    unsigned short received_checksum;
+    printf("\n--- Receiver's Verification ---\n");
+    printf("Simulate received checksum (Use %hu for no error): ", calculated_checksum);
+    
+    if (scanf("%hu", &received_checksum) != 1) {
+        fprintf(stderr, "Invalid input. Exiting.\n");
+        return 1;
+    }
+
+    if (verify_checksum(data, count, received_checksum)) {
+        printf("\nRESULT: Checksum verification successful. NO errors detected.\n");
+    } else {
+        printf("\nRESULT: Checksum verification FAILED. ERROR detected in transmission.\n");
+    }
+
+    return 0;
+}
+
+/*
+Execution Steps:
+
+1. Save the code in a file named checksum.c
+   Command:
+   $ nano checksum.c    (or use any editor)
+
+2. Compile the program:
+   $ gcc checksum.c -o checksum
+
+3. Run the program:
+   $ ./checksum
+
+4. Follow the on-screen prompts:
+   - Enter the number of data segments (e.g., 4)
+   - Enter the data segments (as integers)
+   - Note the generated checksum
+   - Enter received checksum (simulate errors by changing value or use the same for no error)
+   - Program will display whether error is detected or not
+*/

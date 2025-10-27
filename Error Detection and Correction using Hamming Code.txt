@@ -1,0 +1,163 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+int calculate_redundant_bits(int data_bits) {
+    int r = 0;
+    while ((1 << r) < (data_bits + r + 1)) {
+        r++;
+    }
+    return r;
+}
+
+void position_redundant_bits(int data[], int data_bits, int r, int code[]) {
+    int i, j = 0, k = 0;
+
+    for (i = 0; i < (data_bits + r); i++) {
+        if ((i + 1) == (1 << j)) {
+            code[i] = 0;
+            j++;
+        } else {
+            code[i] = data[k];
+            k++;
+        }
+    }
+}
+
+void calculate_parity_bits(int code[], int data_bits, int r) {
+    int i, j, count;
+    int parity_index;
+
+    for (i = 0; i < r; i++) {
+        parity_index = (1 << i);
+
+        count = 0;
+        for (j = parity_index; j <= (data_bits + r); j++) {
+            if (j & parity_index) {
+                if (code[j - 1] == 1) {
+                    count++;
+                }
+            }
+        }
+        
+        code[parity_index - 1] = count % 2; 
+    }
+}
+
+void detect_and_correct(int code[], int data_bits, int r) {
+    int i, j, count;
+    int parity_index;
+    int error_position = 0;
+    
+    for (i = 0; i < r; i++) {
+        parity_index = (1 << i);
+
+        count = 0;
+        for (j = 1; j <= (data_bits + r); j++) {
+            if (j & parity_index) {
+                if (code[j - 1] == 1) {
+                    count++;
+                }
+            }
+        }
+        
+        if (count % 2 != code[parity_index - 1]) {
+            error_position += parity_index;
+        }
+    }
+    
+    if (error_position != 0) {
+        printf("\nError detected at position: %d\n", error_position);
+        
+        code[error_position - 1] = (code[error_position - 1] == 0) ? 1 : 0;
+        printf("Error corrected: bit at position %d flipped.\n", error_position);
+    } else {
+        printf("\nNo error detected.\n");
+    }
+}
+
+void print_data_bits(int code[], int data_bits, int r) {
+    int i, j = 0;
+    
+    printf("\nData after correction: ");
+    for (i = 0; i < (data_bits + r); i++) {
+        if ((i + 1) == (1 << j)) {
+            j++;
+        } else {
+            printf("%d", code[i]);
+        }
+    }
+    printf("\n");
+}
+
+int main() {
+    int data_bits;
+    
+    printf("--- Hamming Code (Single Error Correction) ---\n\n");
+    
+    printf("Enter number of data bits (e.g., 4 or 7): ");
+    if (scanf("%d", &data_bits) != 1 || data_bits <= 0) {
+        fprintf(stderr, "Invalid input. Exiting.\n");
+        return 1;
+    }
+    
+    int r = calculate_redundant_bits(data_bits);
+    int total_bits = data_bits + r;
+
+    int data[data_bits];
+    int code[total_bits];
+
+    printf("Enter %d data bits (0 or 1, one by one):\n", data_bits);
+    for (int i = 0; i < data_bits; i++) {
+        printf("Data bit %d: ", i + 1);
+        if (scanf("%d", &data[i]) != 1 || (data[i] != 0 && data[i] != 1)) {
+            fprintf(stderr, "Invalid bit input. Exiting.\n");
+            return 1;
+        }
+    }
+
+    position_redundant_bits(data, data_bits, r, code);
+    
+    calculate_parity_bits(code, data_bits, r);
+
+    printf("\nCodeword (Data + Parity): ");
+    for (int i = 0; i < total_bits; i++) {
+        printf("%d", code[i]);
+    }
+    printf("\nTotal bits transmitted: %d (Data: %d, Parity: %d)\n", total_bits, data_bits, r);
+    
+    // Uncomment below lines to simulate 1-bit error for testing
+    // code[2] = !code[2]; 
+    // printf("\n--- SIMULATION: 1-bit error introduced at position 3 ---\n");
+    // printf("Received Codeword: ");
+    // for (int i = 0; i < total_bits; i++) { printf("%d", code[i]); }
+    // printf("\n");
+    
+    detect_and_correct(code, data_bits, r);
+
+    print_data_bits(code, data_bits, r);
+
+    return 0;
+}
+
+/*
+Execution Steps:
+
+1. Save the code in a file named hamming.c
+   Command:
+   $ nano hamming.c    (or use any editor)
+
+2. Compile the program:
+   $ gcc hamming.c -o hamming
+
+3. Run the program:
+   $ ./hamming
+
+4. Follow the on-screen prompts:
+   - Enter number of data bits (e.g., 4 or 7)
+   - Enter each data bit (0 or 1)
+   - Codeword (data + parity) will be displayed
+   - Optionally, uncomment simulation lines to test 1-bit error correction
+   - Program will detect and correct any single-bit error
+   - Corrected data will be displayed
+*/
