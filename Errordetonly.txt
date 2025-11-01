@@ -1,0 +1,96 @@
+/*
+ * Hamming Code: Error Detection Only
+ *
+ * This program detects a single-bit error in a received Hamming code.
+ * It works by recomputing parity bits and determining the error position.
+ *
+ * --- HOW TO COMPILE AND RUN ON UBUNTU ---
+ *
+ * Step 1: Save this file as hamming_detect.c
+ * Step 2: Open the terminal and navigate to the directory where the file is saved.
+ * Step 3: Compile the code using GCC:
+ *         gcc hamming_detect.c -o hamming_detect -lm
+ *         (The '-lm' links the math library used for pow() or bit operations.)
+ * Step 4: Run the program:
+ *         ./hamming_detect
+ *
+ * Example:
+ *     $ gcc hamming_detect.c -o hamming_detect -lm
+ *     $ ./hamming_detect
+ *
+ * Then follow the on-screen instructions.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+// Function to detect if an error exists in the received Hamming code
+int detect_error(int code[], int total_bits) {
+    int r = 0;
+
+    // Calculate number of parity bits (r)
+    while ((1 << r) < (total_bits + 1)) {
+        r++;
+    }
+
+    int error_position = 0;
+
+    // Check each parity bit position
+    for (int i = 0; i < r; i++) {
+        int parity_index = (1 << i);
+        int count = 0;
+
+        // Count 1s at positions covered by this parity bit
+        for (int j = 1; j <= total_bits; j++) {
+            if (j & parity_index) {
+                if (code[j - 1] == 1) {
+                    count++;
+                }
+            }
+        }
+
+        // If parity check fails, add this parity index to error position
+        if (count % 2 != 0) {
+            error_position += parity_index;
+        }
+    }
+
+    return error_position;
+}
+
+int main() {
+    int total_bits;
+
+    printf("--- Hamming Code: Error Detection Only ---\n\n");
+    printf("Enter total number of bits received: ");
+    
+    // Input validation for total bits
+    if (scanf("%d", &total_bits) != 1 || total_bits <= 0) {
+        fprintf(stderr, "Invalid input.\n");
+        return 1;
+    }
+
+    int code[total_bits];
+    printf("Enter received bits (0 or 1):\n");
+
+    // Take bit input one by one
+    for (int i = 0; i < total_bits; i++) {
+        printf("Bit %d: ", i + 1);
+        if (scanf("%d", &code[i]) != 1 || (code[i] != 0 && code[i] != 1)) {
+            fprintf(stderr, "Invalid bit.\n");
+            return 1;
+        }
+    }
+
+    // Call function to detect error position
+    int error_position = detect_error(code, total_bits);
+
+    // Display result
+    if (error_position == 0)
+        printf("\n✅ No error detected in received code.\n");
+    else
+        printf("\n❌ Error detected at bit position: %d\n", error_position);
+
+    return 0;
+}
