@@ -1,84 +1,86 @@
-// WAP to build client-server model (Half Duplex Communication)
-// File: server.c
+import socket
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+# -------------------- SERVER SETUP --------------------
+# Create socket object
+server = socket.socket()
 
-int main() {
-    int sockfd, newsockfd;
-    struct sockaddr_in serverAddr, clientAddr;
-    socklen_t addr_size;
-    char buffer[1024];
+# 🧠 ENTER YOUR SERVER MACHINE IP BELOW:
+# Example: '192.168.1.5'  ← Replace with your computer's IPv4 address
+# Or use 'localhost' if running both server and client on same PC
+server_ip = input("Enter your Server IP (e.g., 192.168.1.5 or 'localhost'): ")
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        printf("Error in socket creation.\n");
-        exit(1);
-    }
-    printf("Server socket created successfully.\n");
+# Bind the server to your IP and a port number (e.g., 9999)
+server.bind((server_ip, 9999))
 
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(8080);
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
+# Start listening for incoming connections
+server.listen(1)
+print(f"✅ Server started on {server_ip}:9999 — waiting for client connection...")
 
-    if (bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-        printf("Error in binding.\n");
-        exit(1);
-    }
-    printf("Binding successful.\n");
+# Accept a connection from the client
+conn, addr = server.accept()
+print("🔗 Connected with client at:", addr)
 
-    if (listen(sockfd, 5) == 0)
-        printf("Listening...\n");
-    else {
-        printf("Error in listening.\n");
-        exit(1);
-    }
+# -------------------- COMMUNICATION LOOP --------------------
+# Half duplex: Only one side communicates at a time.
+# The client sends a message first; the server responds.
+while True:
+    # Receive message from client
+    msg = conn.recv(1024).decode()
+    print("Client:", msg)
 
-    addr_size = sizeof(clientAddr);
-    newsockfd = accept(sockfd, (struct sockaddr*)&clientAddr, &addr_size);
-    if (newsockfd < 0) {
-        printf("Error in accepting.\n");
-        exit(1);
-    }
+    if msg.lower() == "exit":
+        print("❌ Client ended the chat.")
+        break
 
-    while (1) {
-        bzero(buffer, sizeof(buffer));
-        recv(newsockfd, buffer, sizeof(buffer), 0);
-        printf("Client: %s\n", buffer);
+    # Server sends reply
+    reply = input("You: ")
+    conn.send(reply.encode())
 
-        if (strncmp(buffer, "exit", 4) == 0) {
-            printf("Disconnected from client.\n");
-            break;
-        }
+    if reply.lower() == "exit":
+        print("✅ Chat closed by server.")
+        break
 
-        bzero(buffer, sizeof(buffer));
-        printf("Server: ");
-        fgets(buffer, sizeof(buffer), stdin);
-        send(newsockfd, buffer, strlen(buffer), 0);
+# Close connection
+conn.close()
 
-        if (strncmp(buffer, "exit", 4) == 0) {
-            printf("Server exiting.\n");
-            break;
-        }
-    }
 
-    close(newsockfd);
-    close(sockfd);
-    return 0;
-}
-
-/*
-------------------- EXECUTION STEPS -------------------
-# 1. Compile the code
-gcc server.c -o server
-
-# 2. Run the server
-./server
-
-# 3. The server will wait for a client connection.
-# 4. Then open another terminal (or use another computer) and run the client program.
--------------------------------------------------------
-*/
+# -------------------- UBUNTU EXECUTION STEPS --------------------
+# 1️⃣ Open the Terminal in Ubuntu.
+#
+# 2️⃣ Verify Python installation:
+#     python3 --version
+#    If not installed, install it using:
+#     sudo apt update && sudo apt install python3
+#
+# 3️⃣ Save this file as `server_halfduplex.py`.
+#
+# 4️⃣ Find your local IP address (if connecting from another machine):
+#     hostname -I
+#    Example output: 192.168.1.5
+#
+# 5️⃣ Run the server:
+#     python3 server_halfduplex.py
+#
+# 6️⃣ When prompted, enter your server IP:
+#     - Use `localhost` if the client is on the same machine.
+#     - Use your IPv4 (e.g., 192.168.1.5) if connecting from another PC.
+#
+# 7️⃣ The server will start and display:
+#     ✅ Server started on <IP>:9999 — waiting for client connection...
+#
+# 8️⃣ Now, run the **client** program on another terminal or another computer.
+#     Once the client connects, you’ll see:
+#     🔗 Connected with client at: ('192.168.1.x', <port>)
+#
+# 9️⃣ Communication process (Half-Duplex mode):
+#     - The client sends a message first.
+#     - The server receives it and then replies.
+#     - Only one side talks at a time.
+#
+# 🔟 To end the chat:
+#     - Type `exit` from either the server or client side.
+#
+# ✅ Notes:
+#   - Make sure both server and client are using the same port (9999).
+#   - If using different machines, ensure both are on the same Wi-Fi network.
+#   - If you get a "Connection refused" error, check your IP and firewall settings.
