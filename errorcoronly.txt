@@ -1,0 +1,87 @@
+/*
+ * Hamming Code: Error Correction Only
+ *
+ * This program corrects a single-bit error in a received Hamming code.
+ * The user must input the total number of bits, the received bits,
+ * and the bit position where an error was detected earlier.
+ *
+ * --- HOW TO COMPILE AND RUN ON UBUNTU ---
+ *
+ * Step 1: Save this file as hamming_correct.c
+ * Step 2: Open a terminal and navigate to the directory where the file is saved.
+ * Step 3: Compile the code using GCC:
+ *         gcc hamming_correct.c -o hamming_correct
+ * Step 4: Run the program:
+ *         ./hamming_correct
+ *
+ * Example:
+ *     $ gcc hamming_correct.c -o hamming_correct
+ *     $ ./hamming_correct
+ *
+ * When prompted:
+ *  - Enter total number of bits in the received codeword.
+ *  - Enter each bit (0 or 1).
+ *  - Enter the bit position where the error was detected.
+ *
+ * The program will flip (correct) that bit and display the corrected codeword.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Function to correct the detected error by flipping the erroneous bit
+void correct_error(int code[], int total_bits, int error_position) {
+    // Validate error position
+    if (error_position < 1 || error_position > total_bits) {
+        printf("\n⚠️ Invalid error position: %d (out of range)\n", error_position);
+        return;
+    }
+
+    // Flip the erroneous bit (0 -> 1 or 1 -> 0)
+    code[error_position - 1] = (code[error_position - 1] == 0) ? 1 : 0;
+
+    // Display the corrected result
+    printf("\n✅ Error corrected at position: %d\n", error_position);
+    printf("Corrected codeword: ");
+    for (int i = 0; i < total_bits; i++) {
+        printf("%d", code[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int total_bits, error_position;
+
+    printf("--- Hamming Code: Error Correction Only ---\n\n");
+
+    // Input: total bits
+    printf("Enter total number of bits in the codeword: ");
+    if (scanf("%d", &total_bits) != 1 || total_bits <= 0) {
+        fprintf(stderr, "Invalid input.\n");
+        return 1;
+    }
+
+    int code[total_bits];
+
+    // Input: code bits one by one
+    printf("Enter received bits (0 or 1):\n");
+    for (int i = 0; i < total_bits; i++) {
+        printf("Bit %d: ", i + 1);
+        if (scanf("%d", &code[i]) != 1 || (code[i] != 0 && code[i] != 1)) {
+            fprintf(stderr, "Invalid bit.\n");
+            return 1;
+        }
+    }
+
+    // Input: error position (as found by the detection program)
+    printf("\nEnter the position of the error (as detected earlier): ");
+    if (scanf("%d", &error_position) != 1) {
+        fprintf(stderr, "Invalid input.\n");
+        return 1;
+    }
+
+    // Call correction function
+    correct_error(code, total_bits, error_position);
+
+    return 0;
+}
