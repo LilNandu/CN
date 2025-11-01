@@ -1,101 +1,63 @@
-// WAP to build client-server model (Full Duplex Communication)
-// File: server.c
+import socket
+import threading
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <pthread.h>
+# -------------------- SERVER SETUP --------------------
+server = socket.socket()
 
-int newSocket;
+# 🧠 ENTER YOUR SERVER MACHINE IP BELOW:
+# Example: '192.168.1.5'  ← Replace with your computer's IP
+# Or use 'localhost' if testing both on same PC
+server_ip = input("Enter your Server IP (e.g., 192.168.1.5 or 'localhost'): ")
 
-// Function for receiving messages
-void *recv_msg(void *arg) {
-    char buffer[1024];
-    while (1) {
-        bzero(buffer, sizeof(buffer));
-        recv(newSocket, buffer, sizeof(buffer), 0);
-        if (strncmp(buffer, "exit", 4) == 0) {
-            printf("\nClient disconnected.\n");
-            close(newSocket);
-            exit(0);
-        }
-        printf("\nClient: %s", buffer);
-        printf("Server: ");
-        fflush(stdout);
-    }
-}
+server.bind((server_ip, 9999))  # Bind to specified IP and port
+server.listen(1)  # Start listening for incoming connections
+print(f"✅ Server started on {server_ip}:9999 — waiting for client...")
 
-// Function for sending messages
-void *send_msg(void *arg) {
-    char buffer[1024];
-    while (1) {
-        bzero(buffer, sizeof(buffer));
-        printf("Server: ");
-        fgets(buffer, sizeof(buffer), stdin);
-        send(newSocket, buffer, strlen(buffer), 0);
-        if (strncmp(buffer, "exit", 4) == 0) {
-            printf("Server exiting.\n");
-            close(newSocket);
-            exit(0);
-        }
-    }
-}
+conn, addr = server.accept()  # Accept incoming connection
+print("🔗 Connected with client at:", addr)
 
-int main() {
-    int sockfd;
-    struct sockaddr_in serverAddr, clientAddr;
-    socklen_t addr_size;
+# -------------------- THREAD FUNCTIONS --------------------
+def receive():
+    while True:
+        msg = conn.recv(1024).decode()  # Receive message from client
+        if not msg or msg.lower() == "exit":
+            print("\n❌ Client ended chat.")
+            break
+        print("\nClient:", msg)
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        printf("Error in socket creation.\n");
-        exit(1);
-    }
-    printf("Server socket created successfully.\n");
+def send():
+    while True:
+        msg = input()  # Get input from server
+        conn.send(msg.encode())  # Send message to client
+        if msg.lower() == "exit":
+            print("✅ Chat closed by server.")
+            break
 
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(8080);
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
+# -------------------- START FULL DUPLEX --------------------
+# Create and start threads for receiving and sending messages concurrently
+t1 = threading.Thread(target=receive)
+t2 = threading.Thread(target=send)
 
-    if (bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-        printf("Error in binding.\n");
-        exit(1);
-    }
-    printf("Binding successful.\n");
+t1.start()
+t2.start()
 
-    if (listen(sockfd, 5) == 0)
-        printf("Listening...\n");
-    else {
-        printf("Error in listening.\n");
-        exit(1);
-    }
+# -------------------- UBUNTU EXECUTION STEPS --------------------
+# 1. Open your terminal in Ubuntu.
+# 2. Make sure Python is installed by running: `python3 --version`.
+#    If not, install it using: `sudo apt update && sudo apt install python3`.
+# 3. Save this script as `server.py` on your machine.
+# 4. Open terminal and navigate to the directory where the script is saved.
+# 5. Run the server script by executing:
+#    ```
+#    python3 server.py
+#    ```
+#    It will ask for the server IP.
+#    - If you're running the server on the same machine, you can enter `localhost`.
+#    - If you want it on a different machine, use your computer's local IP address (e.g., `192.168.1.5`).
+# 6. If you wish to use a different port, make sure to change the port number `9999` in both the server and client.
+# 7. Once the server is running, wait for a client to connect. The server will print a confirmation of the connection.
+# 8. Now the server is ready to communicate with a client using full-duplex communication:
+#    - The server will listen for messages from the client.
+#    - You can also send messages to the client.
+# 9. To exit, type `exit` in the server terminal or let the client send `exit`.
 
-    addr_size = sizeof(clientAddr);
-    newSocket = accept(sockfd, (struct sockaddr*)&clientAddr, &addr_size);
-    printf("Client connected.\n");
-
-    pthread_t sendThread, recvThread;
-    pthread_create(&sendThread, NULL, send_msg, NULL);
-    pthread_create(&recvThread, NULL, recv_msg, NULL);
-
-    pthread_join(sendThread, NULL);
-    pthread_join(recvThread, NULL);
-
-    close(sockfd);
-    return 0;
-}
-
-/*
-------------------- EXECUTION STEPS -------------------
-# 1. Compile the server code:
-gcc server.c -o server -lpthread
-
-# 2. Run the server:
-./server
-
-# 3. Wait for the client to connect.
-# 4. Then open another terminal (or use another computer) and run the client program.
--------------------------------------------------------
-*/
