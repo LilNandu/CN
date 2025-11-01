@@ -1,5 +1,3 @@
-_half duplex client_
-
 import socket
 
 # -------------------- CLIENT SETUP --------------------
@@ -35,3 +33,4 @@ while True:
 
 # Close connection
 client.close()
+# first run python3 server.py and then run python3 client.py
