@@ -1,69 +1,37 @@
-// WAP to build client-server model (Half Duplex Communication)
-// File: client.c
+_half duplex client_
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+import socket
 
-int main() {
-    int clientSocket;
-    struct sockaddr_in serverAddr;
-    char buffer[1024];
+# -------------------- CLIENT SETUP --------------------
+# Create socket object
+client = socket.socket()
 
-    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (clientSocket < 0) {
-        printf("Error in socket creation.\n");
-        exit(1);
-    }
-    printf("Client socket created successfully.\n");
+# 🧠 ENTER THE SERVER MACHINE IP BELOW:
+# This IP should be the same as the one you entered in the server file
+# Example: '192.168.1.5' or 'localhost' (if same computer)
+server_ip = input("Enter Server IP to connect (e.g., 192.168.1.5 or 'localhost'): ")
 
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(8080);
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); // Change IP if using different computers
+# Connect to the server
+client.connect((server_ip, 9999))
+print("✅ Connected to server!")
 
-    if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-        printf("Connection error.\n");
-        exit(1);
-    }
-    printf("Connected to server.\n");
+# -------------------- COMMUNICATION LOOP --------------------
+while True:
+    # Client sends a message
+    msg = input("You: ")
+    client.send(msg.encode())
 
-    while (1) {
-        bzero(buffer, sizeof(buffer));
-        printf("Client: ");
-        fgets(buffer, sizeof(buffer), stdin);
-        send(clientSocket, buffer, strlen(buffer), 0);
+    if msg.lower() == "exit":
+        print("✅ Chat closed by client.")
+        break
 
-        if (strncmp(buffer, "exit", 4) == 0) {
-            printf("Client exiting.\n");
-            break;
-        }
+    # Client waits for reply from server
+    reply = client.recv(1024).decode()
+    print("Server:", reply)
 
-        bzero(buffer, sizeof(buffer));
-        recv(clientSocket, buffer, sizeof(buffer), 0);
-        printf("Server: %s\n", buffer);
+    if reply.lower() == "exit":
+        print("❌ Server ended the chat.")
+        break
 
-        if (strncmp(buffer, "exit", 4) == 0) {
-            printf("Disconnected from server.\n");
-            break;
-        }
-    }
-
-    close(clientSocket);
-    return 0;
-}
-
-/*
-------------------- EXECUTION STEPS -------------------
-# 1. Compile the code
-gcc client.c -o client
-
-# 2. Run the client
-./client
-
-# 3. Communicate with the server.
-#    Type messages and press Enter to send.
-#    Type 'exit' to end the chat.
--------------------------------------------------------
-*/
+# Close connection
+client.close()
