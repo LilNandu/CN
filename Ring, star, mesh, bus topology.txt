@@ -1,0 +1,197 @@
+Star Topology
+
+1. Open Cisco Packet Tracer and create a new blank workspace.
+
+2. From the device list, go to Switches and drag one 2960 switch (Switch0) onto the workspace.
+
+3. From End Devices, drag 4 to 6 PCs (PC0, PC1, PC2, PC3, PC4, PC5) around the switch.
+
+4. Click the Connections icon (lightning bolt) to select cables.
+
+5. Choose Copper Straight-Through cable.
+
+6. Connect the devices as follows:
+   - PC0 → Switch0 FastEthernet0/1
+   - PC1 → Switch0 FastEthernet0/2
+   - PC2 → Switch0 FastEthernet0/3
+   - PC3 → Switch0 FastEthernet0/4
+   - PC4 → Switch0 FastEthernet0/5
+   - PC5 → Switch0 FastEthernet0/6 (optional)
+
+7. Assign IP addresses to each PC:
+   - Click PC0 → Desktop → IP Configuration → set IP to 192.168.1.2 and Subnet Mask 255.255.255.0
+   - PC1 → 192.168.1.3 / 255.255.255.0
+   - PC2 → 192.168.1.4 / 255.255.255.0
+   - PC3 → 192.168.1.5 / 255.255.255.0
+   - PC4 → 192.168.1.6 / 255.255.255.0
+   - PC5 → 192.168.1.7 / 255.255.255.0 (optional)
+
+8. Verify connectivity using ping:
+   - Open PC0 → Desktop → Command Prompt
+   - Type: ping 192.168.1.3
+   - Then ping other PCs:
+       ping 192.168.1.4
+       ping 192.168.1.5
+       ping 192.168.1.6
+       ping 192.168.1.7
+
+9. If all replies are received, the star topology is successfully implemented.
+
+
+
+
+
+
+Bus Topology
+
+1. Open Cisco Packet Tracer and create a new blank workspace.
+
+2. From End Devices, drag 4 to 6 PCs (PC0, PC1, PC2, PC3, PC4, PC5) onto the workspace in a straight horizontal line.
+
+3. From Network Devices → Hubs, drag one Hub0 and place it near PC0.
+
+4. Drag another hub (Hub1) and place it near the middle PCs.
+
+5. Drag a third hub (Hub2) and place it near the last PCs.
+   (This will act as the bus-like structure.)
+
+6. Select the Connections icon (lightning bolt).
+
+7. Choose Copper Straight-Through cable.
+
+8. Connect PCs to their nearest hub:
+   - PC0 → Hub0 Port 1
+   - PC1 → Hub0 Port 2
+   - PC2 → Hub1 Port 1
+   - PC3 → Hub1 Port 2
+   - PC4 → Hub2 Port 1
+   - PC5 → Hub2 Port 2
+
+9. Connect hubs to form a linear chain (bus structure):
+   - Hub0 Port 3 → Hub1 Port 3
+   - Hub1 Port 4 → Hub2 Port 3
+
+10. Assign IP addresses to each PC:
+    - PC0 → 192.168.1.2 / 255.255.255.0
+    - PC1 → 192.168.1.3 / 255.255.255.0
+    - PC2 → 192.168.1.4 / 255.255.255.0
+    - PC3 → 192.168.1.5 / 255.255.255.0
+    - PC4 → 192.168.1.6 / 255.255.255.0
+    - PC5 → 192.168.1.7 / 255.255.255.0
+
+11. Perform connectivity test using Ping:
+    - Open PC0 → Desktop → Command Prompt
+    - Type: ping 192.168.1.3
+    - Then ping all other PCs:
+        ping 192.168.1.4
+        ping 192.168.1.5
+        ping 192.168.1.6
+        ping 192.168.1.7
+
+12. If all replies are received, the bus topology is successfully implemented.
+
+
+
+
+
+
+
+Ring Topology
+
+1. Open Cisco Packet Tracer and create a new blank workspace.
+
+2. From End Devices, drag 4 to 6 PCs (PC0, PC1, PC2, PC3, PC4, PC5) onto the workspace in a circular layout.
+
+3. From Network Devices → Switches, drag 4 to 6 switches (Switch0, Switch1, Switch2, Switch3, Switch4, Switch5) and place each switch next to one PC.
+
+4. Select the Connections icon (lightning bolt).
+
+5. Choose Copper Straight-Through cable.
+
+6. Connect each PC to its nearby switch:
+   - PC0 → Switch0 (FastEthernet0/1)
+   - PC1 → Switch1 (FastEthernet0/1)
+   - PC2 → Switch2 (FastEthernet0/1)
+   - PC3 → Switch3 (FastEthernet0/1)
+   - PC4 → Switch4 (FastEthernet0/1)
+   - PC5 → Switch5 (FastEthernet0/1)
+
+7. Connect switches in a ring:
+   - Switch0 (Fa0/2) → Switch1 (Fa0/2)
+   - Switch1 (Fa0/3) → Switch2 (Fa0/3)
+   - Switch2 (Fa0/4) → Switch3 (Fa0/4)
+   - Switch3 (Fa0/5) → Switch4 (Fa0/5)
+   - Switch4 (Fa0/6) → Switch5 (Fa0/6)
+   - Switch5 (Fa0/7) → Switch0 (Fa0/7)
+
+8. Assign IP addresses to each PC:
+   - PC0 → 192.168.1.2 / 255.255.255.0
+   - PC1 → 192.168.1.3 / 255.255.255.0
+   - PC2 → 192.168.1.4 / 255.255.255.0
+   - PC3 → 192.168.1.5 / 255.255.255.0
+   - PC4 → 192.168.1.6 / 255.255.255.0
+   - PC5 → 192.168.1.7 / 255.255.255.0
+
+9. Verify connectivity using Ping:
+   - Open PC0 → Desktop → Command Prompt
+   - Type: ping 192.168.1.3
+   - Then ping all other PCs:
+        ping 192.168.1.4
+        ping 192.168.1.5
+        ping 192.168.1.6
+        ping 192.168.1.7
+
+10. If all replies are received, the ring topology is successfully implemented.
+
+
+
+
+
+
+Mesh Topology
+
+1. Open Cisco Packet Tracer and create a new blank workspace.
+
+2. From End Devices, drag 4 to 6 PCs (PC0, PC1, PC2, PC3, PC4, PC5) onto the workspace.
+
+3. From Network Devices → Switches, drag the same number of switches as PCs (Switch0, Switch1, Switch2, etc.) and place each switch near a PC.
+
+4. Select the Connections icon (lightning bolt).
+
+5. Choose Copper Straight-Through cable.
+
+6. Connect each PC to its nearby switch:
+   - PC0 → Switch0 FastEthernet0/1
+   - PC1 → Switch1 FastEthernet0/1
+   - PC2 → Switch2 FastEthernet0/1
+   - PC3 → Switch3 FastEthernet0/1
+   - PC4 → Switch4 FastEthernet0/1
+   - PC5 → Switch5 FastEthernet0/1
+
+7. Connect switches in a full mesh (every switch connected to every other switch):
+   - Switch0 → Switch1, Switch0 → Switch2, Switch0 → Switch3, Switch0 → Switch4, Switch0 → Switch5
+   - Switch1 → Switch2, Switch1 → Switch3, Switch1 → Switch4, Switch1 → Switch5
+   - Switch2 → Switch3, Switch2 → Switch4, Switch2 → Switch5
+   - Switch3 → Switch4, Switch3 → Switch5
+   - Switch4 → Switch5
+
+8. Assign IP addresses to each PC:
+   - PC0 → 192.168.1.2 / 255.255.255.0
+   - PC1 → 192.168.1.3 / 255.255.255.0
+   - PC2 → 192.168.1.4 / 255.255.255.0
+   - PC3 → 192.168.1.5 / 255.255.255.0
+   - PC4 → 192.168.1.6 / 255.255.255.0
+   - PC5 → 192.168.1.7 / 255.255.255.0
+
+9. Verify connectivity using Ping:
+   - Open PC0 → Desktop → Command Prompt
+   - Type: ping 192.168.1.3
+   - Then ping all other PCs:
+        ping 192.168.1.4
+        ping 192.168.1.5
+        ping 192.168.1.6
+        ping 192.168.1.7
+
+10. If all replies are received, the mesh topology is successfully implemented.
+
+
